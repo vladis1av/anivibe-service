@@ -1,33 +1,50 @@
 package main
 
 import (
-	"anivibe-service/internal/app"
+	"anivibe-service/internal/config"
+	"anivibe-service/internal/http"
+	"anivibe-service/internal/infrastructure/routers/http/api"
+	"context"
 	"log"
+
+	"github.com/gorilla/mux"
 )
 
-var configPath string
-
-// func init() {
-// 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
-// }
-
 func main() {
-	log.Println("Init app")
+	log.Print("Init APP")
 
-	// flag.Parse()
+	mainRouter := mux.NewRouter()
+	proxyRouter := mux.NewRouter()
 
-	// log.Println("Load config")
-	// err := config.Load(configPath)
-	// if err != nil {
-	// 	log.Fatal("failed to load config: ", err)
-	// }
+	api.SetupAPIRouters(mainRouter, proxyRouter)
 
-	// httpConfig, err := env.NewHTTPConfig()
-	// if err != nil {
-	// 	log.Fatal("failed to get http config: ", err)
-	// }
+	log.Print("Load Config")
+	cfg := config.LoadConfig()
 
-	application := app.NewApp(":80")
+	httpConfig := &http.Config{
+		ListenAddr:     cfg.HTTPAddr,
+		ReadTimeout:    cfg.ReadTimeout,
+		WriteTimeout:   cfg.WriteTimeout,
+		IdleTimeout:    cfg.IdleTimeout,
+		MaxHeaderBytes: cfg.MaxHeaderBytes,
+	}
 
-	application.Run()
+	proxyConfig := &http.Config{
+		ListenAddr:     cfg.ProxyHTTPAddr,
+		ReadTimeout:    cfg.ProxyReadTimeout,
+		WriteTimeout:   cfg.ProxyWriteTimeout,
+		IdleTimeout:    cfg.ProxyIdleTimeout,
+		MaxHeaderBytes: cfg.ProxyMaxHeaderBytes,
+	}
+
+	log.Print("Init Servers")
+	mainServer := http.NewHTTP("ANIVIBE", mainRouter, httpConfig)
+	proxyServer := http.NewHTTP("ANIVIBE_PROXY", proxyRouter, proxyConfig)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := mainServer.RunAndManageServers(ctx, mainServer, proxyServer); err != nil {
+		log.Fatalf("Server error: %v", err)
+	}
 }

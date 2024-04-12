@@ -44,6 +44,7 @@ func sendResponse(w http.ResponseWriter, data response, statusCode int, err erro
 	json.NewEncoder(w).Encode(resp)
 }
 
+// TODO Вынести в конфиг и прокидывать сюда параметры
 var client = desume.NewClient()
 
 func GetMangaById(w http.ResponseWriter, r *http.Request) {

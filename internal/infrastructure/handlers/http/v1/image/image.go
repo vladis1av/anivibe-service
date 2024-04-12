@@ -2,6 +2,7 @@ package image
 
 import (
 	"anivibe-service/internal/utils"
+	"io"
 	"net/http"
 )
 
@@ -10,14 +11,14 @@ func Proxy(w http.ResponseWriter, r *http.Request) {
 	referer := r.URL.Query().Get("referer")
 	authority := r.URL.Query().Get("authority")
 
-	image, err := utils.FetchImage(url, referer, authority)
-
+	imageBody, err := utils.FetchImage(url, referer, authority)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer imageBody.Close()
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Write(image)
+	io.Copy(w, imageBody)
 }

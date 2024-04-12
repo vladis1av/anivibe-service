@@ -27,7 +27,7 @@ func main() {
 	// 	log.Fatal("failed to get http config: ", err)
 	// }
 
-	application := app.NewApp(":3001")
+	application := app.NewApp(":80")
 
 	application.Run()
 }

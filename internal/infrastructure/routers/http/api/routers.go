@@ -1,4 +1,4 @@
-package v1
+package api
 
 import (
 	v1 "anivibe-service/internal/infrastructure/routers/http/api/v1"
@@ -7,12 +7,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func SetupAPIRouters(router *mux.Router) {
+const prefixV1 = "/api/v1"
+
+func SetupAPIRouters(mainRouter, proxyRouter *mux.Router) {
 	log.Println("setup routers")
 
-	apiRouter := router.PathPrefix("/api").Subrouter()
-	v1Router := apiRouter.PathPrefix("/v1").Subrouter()
+	mainRouterV1 := mainRouter.PathPrefix(prefixV1).Subrouter()
+	proxyRouterV1 := proxyRouter.PathPrefix(prefixV1).Subrouter()
 
-	v1.SetupV1ImageRouters(v1Router)
-	v1.SetupV1MangaRouters(v1Router)
+	v1.SetupV1MangaRouters(mainRouterV1)
+	v1.SetupV1ImageRouters(proxyRouterV1)
 }

@@ -19,7 +19,7 @@ COPY . .
 RUN go build -ldflags="-s -w" -o /app/app ./cmd/app
 
 # Финальный этап
-FROM caddy:2.6.2-alpine
+FROM nginx:alpine
 
 RUN apk update --no-cache && apk add --no-cache ca-certificates
 
@@ -29,22 +29,10 @@ ENV TZ America/New_York
 WORKDIR /app
 COPY --from=builder /app/app .
 
-# Копируем конфигурацию Caddy
-COPY Caddyfile /etc/caddy/Caddyfile
+# Копируем конфигурацию Nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 80 8081 8082
+EXPOSE 80
 
-# Устанавливаем переменные окружения
-ENV HTTP_ADDR=:8081
-ENV READ_TIMEOUT=5s
-ENV WRITE_TIMEOUT=10s
-ENV IDLE_TIMEOUT=60s
-ENV MAX_HEADER_BYTES=1048576
-ENV PROXY_HTTP_ADDR=:8082
-ENV PROXY_READ_TIMEOUT=30s
-ENV PROXY_WRITE_TIMEOUT=30s
-ENV PROXY_IDLE_TIMEOUT=60s
-ENV PROXY_MAX_HEADER_BYTES=1048576
-
-# Запускаем два экземпляра приложения и Caddy
-CMD ./app --http-addr=$HTTP_ADDR & ./app --http-addr=$PROXY_HTTP_ADDR & caddy run --config /etc/caddy/Caddyfile
+# Запускаем приложение и Nginx
+CMD ./app & nginx -g 'daemon off;'

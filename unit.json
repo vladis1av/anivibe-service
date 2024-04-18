@@ -1,0 +1,17 @@
+{
+  "listeners": {
+    "*:8080": {
+      "pass": "routes"
+    }
+  },
+  "routes": [
+    {
+      "match": {
+        "uri": "/*"
+      },
+      "action": {
+        "pass": "http://127.0.0.1:8081"
+      }
+    }
+  ]
+}

@@ -1,19 +1,15 @@
 {
     http_port 80
 
-    route /api/v1/manga/* {
-        reverse_proxy app1 {
-            to localhost:8080
-        }
+    reverse_proxy /api/v1/manga/* {
+        to localhost:8080
     }
 
-    route /api/v1/image/* {
-        reverse_proxy app2 {
-            to localhost:8081
-        }
+    reverse_proxy /api/v1/image/* {
+        to localhost:8081
     }
 
-    reverse_proxy default {
+    reverse_proxy {
         to localhost:8080 localhost:8081
     }
 }

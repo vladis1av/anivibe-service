@@ -32,8 +32,8 @@ COPY --from=builder /app/app .
 # Копируем конфигурацию Caddy
 COPY Caddyfile /etc/caddy/Caddyfile
 
-# Открываем порт 80 для Caddy
-EXPOSE 80
+EXPOSE 80 8081 8082
+
 # Устанавливаем переменные окружения
 ENV HTTP_ADDR=:8081
 ENV READ_TIMEOUT=5s

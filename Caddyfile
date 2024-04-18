@@ -1,0 +1,11 @@
+{
+    http_port 80
+
+    reverse_proxy app1 {
+        to localhost:8080
+    }
+
+    reverse_proxy app2 {
+        to localhost:8081
+    }
+}

@@ -3,6 +3,7 @@ package image
 import (
 	"anivibe-service/internal/utils"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -18,7 +19,11 @@ func Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 	defer imageBody.Close()
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/octet-stream")
-	io.Copy(w, imageBody)
+	w.WriteHeader(http.StatusOK) // Установка кода статуса перед io.Copy
+	_, err = io.Copy(w, imageBody)
+	if err != nil {
+		log.Printf("Error sending image from %s: %v", url, err)
+		return
+	}
 }

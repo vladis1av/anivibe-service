@@ -12,11 +12,12 @@ import (
 )
 
 type Config struct {
+	MaxHeaderBytes int
 	ListenAddr     string
+	AllowedOrigins []string
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
-	MaxHeaderBytes int
 }
 
 type Http struct {
@@ -26,6 +27,8 @@ type Http struct {
 }
 
 func NewHTTP(appName string, router *mux.Router, config *Config) *Http {
+	router.Use(corsMiddleware(config.AllowedOrigins))
+
 	server := &http.Server{
 		Handler:        router,
 		Addr:           config.ListenAddr,
@@ -77,4 +80,42 @@ func (s *Http) RunAndManageServers(ctx context.Context, servers ...*Http) error 
 	}
 
 	return nil
+}
+
+func corsMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Получаем источник запроса
+			origin := r.Header.Get("Origin")
+
+			// Проверяем, разрешен ли источник
+			allowed := false
+			for _, allowedOrigin := range allowedOrigins {
+				if origin == allowedOrigin {
+					allowed = true
+					break
+				}
+			}
+
+			if allowed {
+				// Разрешаем источник
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+			}
+
+			// Разрешить заголовки
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			// Разрешить методы
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+
+			// Обработать предварительные запросы OPTIONS
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

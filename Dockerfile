@@ -1,6 +1,4 @@
-FROM golang:alpine AS builder
-
-LABEL stage=gobuilder
+FROM golang:alpine AS gobuilder
 
 ENV CGO_ENABLED 0
 ENV GOOS linux
@@ -18,20 +16,16 @@ COPY . .
 
 RUN go build -ldflags="-s -w" -o /app/app ./cmd/app
 
-FROM nginx:alpine
+FROM alpine
 
 RUN apk update --no-cache && apk add --no-cache ca-certificates
 
-COPY --from=builder /usr/share/zoneinfo/America/New_York /usr/share/zoneinfo/America/New_York
-ENV TZ America/New_York
+COPY --from=gobuilder /usr/share/zoneinfo/Europe/Moscow /usr/share/zoneinfo/Europe/Moscow
+ENV TZ Europe/Moscow
 
 WORKDIR /app
-COPY --from=builder /app/app .
-
-# Копируем конфигурацию Nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=gobuilder /app/app .
 
 EXPOSE 80
 
-# Запускаем приложение и Nginx
-CMD ./app & nginx -g 'daemon off;'
+CMD ["./app"]

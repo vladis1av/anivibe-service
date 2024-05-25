@@ -11,6 +11,9 @@ import (
 const defaultConfigPath = ".env"
 
 type Config struct {
+	TelegramBotToken string `env:"TELEGRAM_BOT_TOKEN" env-required:"true"`
+	AdminUserID      int64  `env:"ADMIN_USER_ID" env-required:"true"`
+
 	HTTPAddr       string        `env:"HTTP_ADDR" env-default:":80"`
 	ReadTimeout    time.Duration `env:"READ_TIMEOUT" env-default:"60s"`
 	WriteTimeout   time.Duration `env:"WRITE_TIMEOUT" env-default:"60s"`

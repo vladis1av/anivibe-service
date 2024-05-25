@@ -4,6 +4,7 @@ import (
 	"anivibe-service/internal/config"
 	"anivibe-service/internal/http"
 	"anivibe-service/internal/infrastructure/routers/http/api"
+	"anivibe-service/internal/telegram"
 	"context"
 	"log"
 
@@ -14,8 +15,6 @@ func main() {
 	log.Print("Init APP")
 
 	mainRouter := mux.NewRouter()
-
-	api.SetupAPIRouters(mainRouter)
 
 	log.Print("Load Config")
 	cfg := config.LoadConfig()
@@ -28,8 +27,13 @@ func main() {
 		AllowedOrigins: cfg.AllowedOrigins,
 		MaxHeaderBytes: cfg.MaxHeaderBytes,
 	}
-
 	log.Printf("HTTP Config: %+v", httpConfig)
+
+	log.Printf("Setup api routers ")
+	api.SetupAPIRouters(mainRouter, cfg.AdminUserID)
+
+	log.Printf("Init telegram bot")
+	telegram.InitBot(cfg.TelegramBotToken, false)
 
 	log.Print("Init Servers")
 	mainServer := http.NewHTTP("ANIVIBE", mainRouter, httpConfig)
